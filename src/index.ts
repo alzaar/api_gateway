@@ -1,24 +1,32 @@
+import "dotenv/config";
 import http from "node:http";
+import https from "node:https";
+import express, { Request, Response } from "express";
 
-const PORT = 8000;
+const app = express();
 
-const server = http.createServer((req, res) => {
-  const targetUrl = "http://localhost:4000";
+app.get("/", (req: Request, res: Response) => {
+  const targetUrl = process.env.PROXY_SERVER_URL || "";
   const parsedUrl = new URL(targetUrl);
 
   const options = {
     hostname: parsedUrl.hostname,
-    port: parsedUrl.port || 80,
+    port: parsedUrl.port || (parsedUrl.protocol === "https" ? 443 : 80),
     path: req.url,
     method: req.method,
     headers: req.headers,
   };
 
-  const proxyReq = http.request(options, (proxyRes: http.IncomingMessage) => {
-    const statusCode = proxyRes.statusCode || 500;
-    res.writeHead(statusCode, proxyRes.headers);
-    proxyRes.pipe(res, { end: true });
-  });
+  const protocol = parsedUrl.protocol === "https" ? https : http;
+
+  const proxyReq = protocol.request(
+    options,
+    (proxyRes: http.IncomingMessage) => {
+      const statusCode = proxyRes.statusCode || 500;
+      res.writeHead(statusCode, proxyRes.headers);
+      proxyRes.pipe(res, { end: true });
+    }
+  );
 
   req.pipe(proxyReq, { end: true });
 
@@ -29,4 +37,4 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(PORT, () => console.log(`Listening on PORT: ${PORT}`));
+app.listen(process.env.PORT, () => console.log("Listening on 8000"));
