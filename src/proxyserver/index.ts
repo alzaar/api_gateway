@@ -6,41 +6,20 @@ import express, { Request, Response } from "express";
 
 const app = express();
 const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID, // Your AWS Access Key ID
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY, // Your AWS Secret Access Key
-  region: process.env.AWS_REGION, // Your AWS Region
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
 });
 
-// interface MulterRequest extends Request {
-//   file?: Express.Multer.File;
-// }
-
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 interface CustomRequest extends Request {
   file?: Express.Multer.File;
 }
 
-// const storage = multer.diskStorage({
-//   destination: (
-//     req: Request,
-//     file: Express.Multer.File,
-//     cb: (error: Error | null, destination: string) => void
-//   ) => {
-//     cb(null, "./uploads"); // Directory to save uploaded files
-//   },
-//   filename: (
-//     req: Request,
-//     file: Express.Multer.File,
-//     cb: (error: Error | null, filename: string) => void
-//   ) => {
-//     cb(null, `${Date.now()}-${file.originalname}`); // Add timestamp to the filename
-//   },
-// });
-
 app.get("/", (req: Request, res: Response) => {
   res.send({ message: "hello world" });
 });
-
-// const upload = multer({ storage });
 
 app.post("/upload", (req: Request, res: Response) => {
   const bb = busboy({ headers: req.headers });
@@ -50,15 +29,18 @@ app.post("/upload", (req: Request, res: Response) => {
     (
       fieldname: string,
       fileStream: NodeJS.ReadableStream,
-      filename: string,
+      uploadObject: any,
       encoding: string,
       mimetype: string
     ) => {
+      const { filename } = uploadObject;
+      const date = new Date();
+      const timestamp = `${date.getDate()}-${date.getMonth()}-${date.getFullYear()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}`;
       console.log(`Uploading file: ${filename}`);
 
       const params: AWS.S3.PutObjectRequest = {
         Bucket: process.env.AWS_S3_BUCKET_NAME || "",
-        Key: `${Date.now()}-${filename}`,
+        Key: `${filename}-[${timestamp}]`,
         Body: fileStream,
         ContentType: mimetype,
       };
@@ -83,6 +65,8 @@ app.post("/upload", (req: Request, res: Response) => {
     console.error("Error processing file:", err);
     res.status(500).json({ error: "File processing error" });
   });
+
+  bb.on("finish", () => console.log("Successfully uploaded file."))
 
   req.pipe(bb);
 });
