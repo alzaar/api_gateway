@@ -1,12 +1,12 @@
 # API Gateway
 
-### Features
+## Features
 
 1.Request Routing
 
 - Forward incoming API requests to the appropriate backend services based on the URL path or headers.
-  - Forward files to proxy server
-  - Proxy server uploads to s3 on aws
+- Forward files to proxy server
+- Proxy server uploads to s3 on aws
 
 2 Authentication & Authorization
 
