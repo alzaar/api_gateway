@@ -1,11 +1,45 @@
 import "dotenv/config";
+
 import http from "node:http";
 import https from "node:https";
-import express from "express";
+
+import jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from 'uuid';
+import express, { Request, Response } from "express";
+
+const SECRET_KEY = process.env.SECRET_KEY || "some_secret_12345"
 
 const app = express();
 
-app.use("/", (req, res) => {
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.post("/login", (req: Request, res: Response) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    res.status(400).json({ error: "Username and password are required." });
+    return;
+  }
+
+  if (username !== process.env.USERNAME || password !== process.env.PASSWORD) {
+    res.status(401).json({ error: "Invalid credentials." });
+    return;
+  }
+
+  const token = jwt.sign({ id: uuidv4(), username }, SECRET_KEY, { expiresIn: "1h" })
+  
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict"
+  })
+
+  res.json({ message: "Login successful!" })
+  return
+});
+
+app.use("/", (req: Request, res: Response) => {
   const targetUrl = process.env.PROXY_SERVER_URL || "";
   const parsedUrl = new URL(targetUrl);
 
