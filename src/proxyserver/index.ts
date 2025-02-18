@@ -3,6 +3,7 @@ import "dotenv/config";
 import AWS from "aws-sdk";
 import busboy from "busboy";
 import express, { Request, Response } from "express";
+import { JwtPayload } from "jsonwebtoken";
 
 const app = express();
 const s3 = new AWS.S3({
@@ -16,12 +17,17 @@ app.use(express.urlencoded({ extended: true }));
 interface CustomRequest extends Request {
   file?: Express.Multer.File;
 }
+interface AuthenticatedRequest extends Request {
+  user?: JwtPayload | string;
+}
 
 app.get("/", (req: Request, res: Response) => {
   res.send({ message: "hello world" });
 });
 
-app.post("/upload", (req: Request, res: Response) => {
+app.post("/upload", (req: AuthenticatedRequest, res: Response) => {
+  const { user } = req;
+  console.log(req, "hello");
   const bb = busboy({ headers: req.headers });
 
   bb.on(
@@ -66,7 +72,7 @@ app.post("/upload", (req: Request, res: Response) => {
     res.status(500).json({ error: "File processing error" });
   });
 
-  bb.on("finish", () => console.log("Successfully uploaded file."))
+  bb.on("finish", () => console.log("Successfully uploaded file."));
 
   req.pipe(bb);
 });
