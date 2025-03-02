@@ -8,14 +8,12 @@ import jwt, { JwtPayload, VerifyErrors } from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import express, { Request, Response, NextFunction } from "express";
 
+type User = {
+  id?: string;
+  username?: string;
+};
 interface AuthenticatedRequest extends Request {
-  user?:
-    | JwtPayload
-    | {
-        id: string;
-        username: string;
-      }
-    | string;
+  user?: JwtPayload | User | string;
 }
 
 const SECRET_KEY = process.env.SECRET_KEY || "some_secret_12345";
@@ -98,10 +96,11 @@ app.use("/", (req: AuthenticatedRequest, res: Response) => {
 
   const headers = { ...req.headers };
 
-  // if (req.user) {
-  //   headers["x-user-id"] = req.user.id?.toString() || "";
-  //   headers["x-user-username"] = req.user.username || "";
-  // }
+  if (req.user) {
+    const user = req.user as JwtPayload & User;
+    headers["x-user-id"] = user.id?.toString() || "";
+    headers["x-user-username"] = user.username || "";
+  }
 
   const options = {
     hostname: parsedUrl.hostname,

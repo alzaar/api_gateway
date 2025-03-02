@@ -21,14 +21,44 @@ interface AuthenticatedRequest extends Request {
   user?: JwtPayload | string;
 }
 
+const checkBucketExists = async (bucketName: string | undefined) => {
+  if (!bucketName) {
+    return false;
+  }
+  try {
+    await s3.headBucket({ Bucket: bucketName }).promise();
+    console.log(`✅ Bucket "${bucketName}" exists.`);
+    return true;
+  } catch (error: any) {
+    if (error.statusCode === 404) {
+      console.log(`❌ Bucket "${bucketName}" does not exist.`);
+      return false;
+    }
+    console.error("Error checking bucket:", error);
+    return false;
+  }
+};
+
 app.get("/", (req: Request, res: Response) => {
   res.send({ message: "hello world" });
 });
 
-app.post("/upload", (req: AuthenticatedRequest, res: Response) => {
-  const { user } = req;
-  console.log(req, "hello");
+app.post("/upload", async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.headers["x-user-id"];
+  const username = req.headers["x-user-username"];
   const bb = busboy({ headers: req.headers });
+
+  if (!userId || !username) {
+    res.status(403).json({ message: "Forbidden: Missing user details" });
+    return;
+  }
+
+  const bucketExists = await checkBucketExists(process.env.AWS_S3_BUCKET_NAME);
+
+  if (!bucketExists) {
+    res.status(500).json({ error: "Failed to upload file to S3" });
+    return;
+  }
 
   bb.on(
     "file",

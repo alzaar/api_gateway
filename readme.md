@@ -4,13 +4,13 @@
 
 1.Request Routing
 
-- Forward incoming API requests to the appropriate backend services based on the URL path or headers.
-- Forward files to proxy server
-- Proxy server uploads to s3 on aws
+- ~~Forward incoming API requests to the appropriate backend services based on the URL path or headers.~~
+- ~~Forward files to proxy server~~
+- ~~Proxy server uploads to s3 on aws~~
 
 2 Authentication & Authorization
 
-- Validate user credentials using JWT, OAuth2, or API keys.
+- ~~Validate user credentials using JWT, OAuth2, or API keys.~~
 - Ensure users and services have access only to authorized resources.
 
 3.Rate Limiting
