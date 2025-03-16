@@ -11,7 +11,7 @@
 2 Authentication & Authorization
 
 - ~~Validate user credentials using JWT, OAuth2, or API keys.~~
-- Ensure users and services have access only to authorized resources.
+- ~~Ensure users and services have access only to authorized resources.~~
 
 3.Rate Limiting
 

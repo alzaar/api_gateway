@@ -37,9 +37,15 @@ app.post("/login", (req: Request, res: Response) => {
     return;
   }
 
-  const token = jwt.sign({ id: uuidv4(), username }, SECRET_KEY, {
-    expiresIn: "1h",
-  });
+  const userRole = "yui";
+
+  const token = jwt.sign(
+    { id: uuidv4(), username, role: userRole },
+    SECRET_KEY,
+    {
+      expiresIn: "1h",
+    }
+  );
 
   res.cookie("token", token, {
     httpOnly: true,
@@ -100,6 +106,7 @@ app.use("/", (req: AuthenticatedRequest, res: Response) => {
     const user = req.user as JwtPayload & User;
     headers["x-user-id"] = user.id?.toString() || "";
     headers["x-user-username"] = user.username || "";
+    headers["x-user-username"] = user.role || "";
   }
 
   const options = {
@@ -129,16 +136,6 @@ app.use("/", (req: AuthenticatedRequest, res: Response) => {
     res.write(JSON.stringify({ message: "Internal server error" }));
   });
 });
-
-// const server = http.createServer(
-//   (req: http.IncomingMessage, res: http.ServerResponse) => {
-
-//   }
-// );
-
-// server.listen(process.env.PORT, () =>
-// console.log(`Listening on ${process.env.PORT}`)
-// );
 
 app.listen(process.env.PORT, () =>
   console.log(`Listening on PORT: ${process.env.PORT}`)

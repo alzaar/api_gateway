@@ -46,10 +46,17 @@ app.get("/", (req: Request, res: Response) => {
 app.post("/upload", async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.headers["x-user-id"];
   const username = req.headers["x-user-username"];
+  const userRole = req.headers["x-user-username"];
+
   const bb = busboy({ headers: req.headers });
 
   if (!userId || !username) {
     res.status(403).json({ message: "Forbidden: Missing user details" });
+    return;
+  }
+
+  if (userRole !== "admin") {
+    res.status(403).json({ message: "Forbidden: Unauthorized" });
     return;
   }
 
