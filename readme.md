@@ -15,8 +15,8 @@
 
 3.Rate Limiting
 
-- Limit the number of requests per user or IP to prevent abuse.
-- Implement distributed rate limiting using Redis.
+- ~~Limit the number of requests per user or IP to prevent abuse.~~
+- *Implement distributed rate limiting using Redis.* Revisit later, will require local docker/kubernetes instance. 
 
 4.Caching
 

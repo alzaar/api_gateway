@@ -8,6 +8,10 @@ import jwt, { JwtPayload, VerifyErrors } from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import express, { Request, Response, NextFunction } from "express";
 
+import RateLimiter from "./ratelimiter.ts";
+
+const rateLimiter = new RateLimiter();
+
 type User = {
   id?: string;
   username?: string;
@@ -103,6 +107,13 @@ app.use("/", (req: AuthenticatedRequest, res: Response) => {
   const headers = { ...req.headers };
 
   if (req.user) {
+    try {
+      rateLimiter.allow(req);
+    } catch (err: any) {
+      console.log(err);
+      res.status(err.status).json(err);
+      return;
+    }
     const user = req.user as JwtPayload & User;
     headers["x-user-id"] = user.id?.toString() || "";
     headers["x-user-username"] = user.username || "";
