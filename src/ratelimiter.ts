@@ -1,26 +1,32 @@
+import { Request } from "express";
+
+type BucketConfig = {
+  refillRate: number;
+  capacity: number;
+};
 class LeakyBucket {
-  private bucketSize: number;
+  private tokens: number;
   private refillRate: number;
   private capacity: number;
   private lastTimestamp: number;
 
-  constructor(bucketSize: number, refillRate: number, capacity: number) {
-    this.bucketSize = bucketSize;
+  constructor({ refillRate, capacity }: BucketConfig) {
+    this.tokens = capacity;
     this.refillRate = refillRate; // seconds
     this.capacity = capacity;
     this.lastTimestamp = Date.now();
   }
 
   private refillBucket() {
-    this.bucketSize = this.capacity;
+    this.tokens = this.capacity;
   }
 
   private decrement() {
-    this.bucketSize -= 1;
+    this.tokens -= 1;
   }
 
   private hasTokens() {
-    return this.bucketSize > 0;
+    return this.tokens > 0;
   }
 
   private canRefillBucket() {
@@ -50,4 +56,22 @@ class LeakyBucket {
   }
 }
 
-export default LeakyBucket;
+class RateLimiter {
+  private buckets: Map<string, LeakyBucket>;
+  constructor() {
+    this.buckets = new Map();
+  }
+
+  public allow(request: any) {
+    const userId: string | undefined = request["userId"];
+
+    if (userId) {
+      const userBucket = this.buckets.get(userId);
+      if (userBucket) {
+        userBucket.allow();
+      }
+    }
+  }
+}
+
+export default RateLimiter;
